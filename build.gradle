@@ -36,6 +36,8 @@ dependencies {
 	compile('com.vaadin:vaadin-spring-boot-starter')
 	compile('org.springframework.boot:spring-boot-starter-web')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
+
+    compile group: 'org.projectlombok', name: 'lombok', version: '1.16.18'
 }
 
 dependencyManagement {
