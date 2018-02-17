@@ -10,6 +10,7 @@ public class eDealerUI extends UI {
 
     private VerticalLayout vl;
     private Label profit = new Label("0.0");
+
     private  DateField buyDate = new DateField("DATA TRANSAKCJI");
     private  ComboBox buyCurrency = new ComboBox("WALUTA");
 
@@ -17,6 +18,14 @@ public class eDealerUI extends UI {
     private  ComboBox sellCurrency = new ComboBox("WALUTA");
 
     private TextField buyRate = new TextField("KURS");
+    private TextField buyValue = new TextField("WARTOSC W PLN");
+    private TextField buyQuantity = new TextField("ILOSC");
+
+    private TextField sellRate = new TextField("KURS");
+    private TextField sellValue = new TextField("WARTOSC W PLN");
+    private TextField sellQuantity = new TextField("ILOSC");
+
+
     Services services = new Services();
     NbpClient nbpClient = new NbpClient();
 
@@ -58,12 +67,14 @@ public class eDealerUI extends UI {
         currency.setItems("EUR","GBP","USD");
         currency.addSelectionListener(event -> { buyCurrency.setValue(currency.getValue());
         sellCurrency.setValue(currency.getValue());});
-        TextField buyQuantity = new TextField("ILOSC");
+        TextField bQuantity = buyQuantity;
+        bQuantity.addValueChangeListener(event -> {buyQuantity.setValue(bQuantity.getValue());
+        services.setBuyQuantity(Double.parseDouble(buyQuantity.getValue()));});
         DateField Date = buyDate;
-        Date.addListener(event -> {buyDate.setValue(Date.getValue());});
+        Date.addListener(event -> {buyDate.setValue(Date.getValue()); setBuyFields();});
         TextField bRate = buyRate;
-        TextField buyValue = new TextField("WARTOSC W PLN");
-        hl.addComponentsAndExpand(currency,buyQuantity,Date,buyRate,buyValue);
+        TextField bValue = buyValue;
+        hl.addComponentsAndExpand(currency,bQuantity,Date,bRate,bValue);
 
         vl.addComponent(hl);
         Label header3 = new Label("SPRZEDAŻ");
@@ -74,14 +85,18 @@ public class eDealerUI extends UI {
     private void addSellTextFields() {
         HorizontalLayout formLayout = new HorizontalLayout();
         formLayout.setWidth("80%");
-        ComboBox currency = new ComboBox("WALUTA");
+        ComboBox currency = sellCurrency;
         currency.setItems("EUR","GBP","USD");
         currency.addSelectionListener(event -> {currency.setValue(buyCurrency.getValue());});
-        TextField sellQuantity = new TextField("ILOSC");
+        TextField sQuantity = sellQuantity;
+        sQuantity.addValueChangeListener(event -> {sellQuantity.setValue(sQuantity.getValue());
+        services.setSellQuantity(Double.parseDouble(sellQuantity.getValue()));});
         DateField Date = sellDate;
-        TextField sellRate = new TextField("KURS");
-        TextField sellValue = new TextField("WARTOSC W PLN");
-        formLayout.addComponentsAndExpand(currency, sellQuantity, Date, sellRate, sellValue);
+        Date.addListener(event -> {sellDate.setValue(Date.getValue()); setSellFields();});
+        TextField sRate = sellRate;
+        TextField sValue = sellValue;
+        sValue.setCaption("Sprzedaż nie może być większa niż zakup");
+        formLayout.addComponentsAndExpand(currency, sQuantity, Date, sRate, sValue);
 
         vl.addComponent(formLayout);
     }
@@ -101,25 +116,36 @@ public class eDealerUI extends UI {
         calculate.addStyleName(ValoTheme.BUTTON_PRIMARY);
         vl.addComponent(calculate);
         calculate.addClickListener(event -> {
+            buyValue.setValue(String.format("%.4f",services.calculatePurchaseValue()));
+            sellValue.setValue(String.format("%.4f",services.calculateSellValue()));
             services.calculateProfit();
-            profit.setValue(String.valueOf(services.getProfit()));
-            nbpClient.setURL(createUrl());
-            System.out.println("\n" + "Wysyłam zapytanie pod adres:" + "\n" + nbpClient.getURL() + "\n"
-            + "\n" + "Kurs " + buyCurrency.getValue() + " z dnia: " + buyDate.getValue() + " wynosi: "
-                    + nbpClient.getNbpRate());
+            profit.setValue(String.format("%.2f",services.getProfit()));
+
 
         });
     }
 
-    public String createUrl() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("http://api.nbp.pl/api/exchangerates/rates/A");
-        builder.append("/");
-        builder.append(buyCurrency.getValue());
-        builder.append("/");
-        builder.append(buyDate.getValue());
-        return builder.toString();
+        public void setBuyFields() {
+        nbpClient.setCurrencyCode(String.valueOf(buyCurrency.getValue()));
+        nbpClient.setDate(String.valueOf(buyDate.getValue()));
+        nbpClient.setURL(nbpClient.createUrl());
+        buyRate.setValue(String.valueOf(nbpClient.getNbpRate().get(0).getRate()));
+        services.setBuyRate(Double.parseDouble(buyRate.getValue()));
+        buyValue.setValue(String.format("%.4f",services.calculatePurchaseValue()));
+    }
+
+    public void setSellFields() {
+        nbpClient.setCurrencyCode(String.valueOf(sellCurrency.getValue()));
+        nbpClient.setDate(String.valueOf(sellDate.getValue()));
+        nbpClient.setURL(nbpClient.createUrl());
+        sellRate.setValue(String.valueOf(nbpClient.getNbpRate().get(0).getRate()));
+        services.setSellRate(Double.parseDouble(sellRate.getValue()));
+        sellValue.setValue(String.format("%.4f",services.calculateSellValue()));
     }
 
 
-}
+    }
+
+
+
+
