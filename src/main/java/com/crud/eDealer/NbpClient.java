@@ -18,10 +18,22 @@ import java.util.Optional;
 public class NbpClient {
     private final static RestTemplate REST_TEMPLATE = new RestTemplate();
     private String URL;
+    private String currencyCode;
+    private String date;
 
     public List<NbpDto> getNbpRate() {
         NbpParentDto nbpParentDto  = REST_TEMPLATE.getForObject(URL, NbpParentDto.class);
         return Optional.ofNullable(nbpParentDto.getRates()).orElse(new ArrayList<>());
+    }
+
+    public String createUrl() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("http://api.nbp.pl/api/exchangerates/rates/A");
+        builder.append("/");
+        builder.append(currencyCode);
+        builder.append("/");
+        builder.append(date);
+        return builder.toString();
     }
 
 
