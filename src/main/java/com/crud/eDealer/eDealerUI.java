@@ -1,12 +1,15 @@
 package com.crud.eDealer;
 
+import com.vaadin.annotations.Theme;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
 
 @SpringUI
+@Theme("valo")
 public class eDealerUI extends UI {
+
 
     private VerticalLayout vl;
     private Label profit = new Label("0.0");
@@ -25,10 +28,8 @@ public class eDealerUI extends UI {
     private TextField sellValue = new TextField("WARTOSC W PLN");
     private TextField sellQuantity = new TextField("ILOSC");
 
-
     Services services = new Services();
     NbpClient nbpClient = new NbpClient();
-
 
 
     @Override
@@ -95,7 +96,6 @@ public class eDealerUI extends UI {
         Date.addListener(event -> {sellDate.setValue(Date.getValue()); setSellFields();});
         TextField sRate = sellRate;
         TextField sValue = sellValue;
-        sValue.setCaption("Sprzedaż nie może być większa niż zakup");
         formLayout.addComponentsAndExpand(currency, sQuantity, Date, sRate, sValue);
 
         vl.addComponent(formLayout);
